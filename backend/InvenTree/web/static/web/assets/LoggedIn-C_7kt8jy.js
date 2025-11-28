@@ -1,0 +1,2 @@
+import{dW as o,r as s,j as r,i}from"./vendor-CcuSJJfV.js";import{N as n}from"./index-Cbva9V3Q.js";import{Wrapper as c}from"./Layout-CjXpQfif.js";import{b as u,u as p}from"./ThemeContext-BhpK8cJK.js";function x(){const e=u(),t=p(),a=o(n,300);return s.useEffect(()=>{a(e,t==null?void 0:t.state)},[e]),r.jsx(c,{titleText:i._({id:"ps9k8Y"}),loader:!0})}export{x as default};
+//# sourceMappingURL=LoggedIn-C_7kt8jy.js.map

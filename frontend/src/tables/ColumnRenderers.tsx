@@ -1,0 +1,470 @@
+/**
+ * Common rendering functions for table column data.
+ */
+import { t } from '@lingui/core/macro';
+import { Anchor, Group, Skeleton, Text, Tooltip } from '@mantine/core';
+import {
+  IconBell,
+  IconExclamationCircle,
+  IconLink,
+  IconLock,
+  IconFileDownload
+} from '@tabler/icons-react';
+
+import type { ModelType } from '@lib/enums/ModelType';
+import { cancelEvent } from '@lib/functions/Events';
+import { YesNoButton } from '../components/buttons/YesNoButton';
+import { Thumbnail } from '../components/images/Thumbnail';
+import { ProgressBar } from '../components/items/ProgressBar';
+import { TableStatusRenderer } from '../components/render/StatusRenderer';
+import { RenderOwner, RenderUser } from '../components/render/User';
+import { formatCurrency, formatDate } from '../defaults/formatters';
+import { resolveItem } from '../functions/conversion';
+import { useGlobalSettingsState } from '../states/SettingsStates';
+import type { TableColumn, TableColumnProps } from './Column';
+import { ProjectCodeHoverCard, TableHoverCard } from './TableHoverCard';
+
+// Render a Part instance within a table
+export function PartColumn({
+  part,
+  full_name
+}: {
+  part: any;
+  full_name?: boolean;
+}) {
+  return part ? (
+    <Group justify='space-between' wrap='nowrap'>
+      <Thumbnail
+        src={part?.thumbnail ?? part?.image}
+        text={full_name ? part?.full_name : part?.name}
+        hover
+      />
+      <Group justify='flex-end' wrap='nowrap' gap='xs'>
+        {part?.active == false && (
+          <Tooltip label={t`Part is not active`}>
+            <IconExclamationCircle color='red' size={16} />
+          </Tooltip>
+        )}
+        {part?.locked && (
+          <Tooltip label={t`Part is Locked`}>
+            <IconLock size={16} />
+          </Tooltip>
+        )}
+        {part?.starred && (
+          <Tooltip label={t`You are subscribed to notifications for this part`}>
+            <IconBell size={16} color='green' />
+          </Tooltip>
+        )}
+      </Group>
+    </Group>
+  ) : (
+    <Skeleton />
+  );
+}
+
+export function ShippingLabelColumn(props: TableColumnProps): TableColumn {
+  return {
+    accessor: 'shipping_label_url', 
+    title: t`Shipping Label`,
+    sortable: false,
+    switchable: true,
+    render: (record: any) => {
+      const url = `/api/order/so/${record.pk}/shipping-label/`;
+
+      return (
+        <Anchor
+          href={url}
+          // target="_blank"
+          rel="noopener noreferrer"
+          title={t`Download shipping label`}
+        >
+          <IconFileDownload size={26} />
+        </Anchor>
+      );
+    },
+    ...props,
+  };
+}
+
+// export function ShippingLabelColumn(props: TableColumnProps): TableColumn { 
+//   return {
+//     accessor: 'shipping_label_url', // The field in your data containing the label URL
+//     title: t`Shipping Label`, // Column title
+//     sortable: false, // You can make it sortable if necessary
+//     switchable: true, // To allow the user to toggle the visibility of the column
+//     render: (record: any) => {
+
+//       // Get the shipping label URL from the record
+//       const labelUrl = record.shipping_label_url ? `${record.shipping_label_url}?v=${new Date().getTime()}` : '';
+//       console.log('Shipping label URL:', labelUrl);
+//       // If no label URL is available, show a placeholder message
+//       if (!labelUrl) {
+//         return <Text>{t`No label available`}</Text>;
+//       }
+
+//       // Otherwise, render the "Download" button
+//       return (
+//         <a
+//           href={labelUrl}
+//           className="btn btn-sm btn-outline-secondary"
+//           title={t`Download shipping label`}
+//           download={`SO_${record.reference}_label.pdf`}
+//           onClick={(e) => {
+//             e.preventDefault(); // Prevent default link behavior
+//             downloadLabel(labelUrl, `SO_${record.reference}_label.pdf`); // Trigger the download
+//           }}
+//         >
+//           <IconFileDownload size={26} />
+//           {/* <i className="fas fa-file-pdf"></i> {t`Download`} */}
+//         </a>
+//       );
+//     },
+//     ...props // Spread additional props if needed
+//   };
+// }
+export const downloadLabel = (url: string, filename: string): void => {
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename; // Set the filename
+  link.setAttribute('download', filename);
+  link.style.display = 'none';
+
+  // Append to body, trigger the download, and remove the link
+  document.body.appendChild(link);
+  link.click();
+
+  // Cleanup
+  setTimeout(() => {
+    document.body.removeChild(link);
+  }, 100);
+};
+
+export function CompanyColumn({
+  company
+}: {
+  company: any;
+}) {
+  const displayName = company?.name || company?.individual_name || 'Unknown';
+
+  return company ? (
+    <Group gap="xs" wrap="nowrap">
+      <Thumbnail
+        src={company.thumbnail ?? company.image ?? ''}
+        alt={displayName}
+        size={24}
+        hover
+      />
+      <Text>{displayName}</Text>
+      {company.is_customer && (
+        <span title="Customer" className="fas fa-user-tie float-right" />
+      )}
+      {company.is_manufacturer && (
+        <span title="Manufacturer" className="fas fa-industry float-right" />
+      )}
+      {company.is_supplier && (
+        <span title="Supplier" className="fas fa-building float-right" />
+      )}
+    </Group>
+  ) : (
+    <Skeleton />
+  );
+}
+
+/**
+ * Return a column which displays a tree path for a given record.
+ */
+export function PathColumn(props: TableColumnProps): TableColumn {
+  return {
+    ...props,
+    accessor: props.accessor ?? 'path',
+    render: (record: any) => {
+      const instance = resolveItem(record, props.accessor ?? '');
+
+      if (!instance || !instance.name) {
+        return '-';
+      }
+
+      const name = instance.name ?? '';
+      const pathstring = instance.pathstring || name;
+
+      if (name == pathstring) {
+        return <Text>{name}</Text>;
+      }
+
+      return (
+        <TableHoverCard
+          value={<Text>{instance.name}</Text>}
+          icon='sitemap'
+          title={props.title}
+          extra={[<Text>{instance.pathstring}</Text>]}
+        />
+      );
+    }
+  };
+}
+
+export function LocationColumn(props: TableColumnProps): TableColumn {
+  return PathColumn({
+    accessor: 'location',
+    title: t`Location`,
+    sortable: true,
+    ordering: 'location',
+    ...props
+  });
+}
+
+export function CategoryColumn(props: TableColumnProps): TableColumn {
+  return PathColumn({
+    accessor: 'category',
+    title: t`Category`,
+    sortable: true,
+    ordering: 'category',
+    ...props
+  });
+}
+
+export function BooleanColumn(props: TableColumn): TableColumn {
+  return {
+    sortable: true,
+    switchable: true,
+    render: (record: any) => (
+      <YesNoButton value={resolveItem(record, props.accessor ?? '')} />
+    ),
+    ...props
+  };
+}
+
+export function DescriptionColumn(props: TableColumnProps): TableColumn {
+  return {
+    accessor: 'description',
+    title: t`Description`,
+    sortable: false,
+    switchable: true,
+    width: 300,
+    ...props
+  };
+}
+
+export function LinkColumn(props: TableColumnProps): TableColumn {
+  return {
+    accessor: 'link',
+    sortable: false,
+    defaultVisible: false,
+    render: (record: any) => {
+      const url = resolveItem(record, props.accessor ?? 'link');
+
+      if (!url) {
+        return '-';
+      }
+
+      return (
+        <Anchor
+          href={url}
+          target='_blank'
+          rel='noreferrer noopener'
+          onClick={(event: any) => {
+            cancelEvent(event);
+
+            window.open(url, '_blank', 'noopener,noreferrer');
+          }}
+          title={url}
+        >
+          <IconLink size={18} />
+        </Anchor>
+      );
+    },
+    ...props
+  };
+}
+
+export function ReferenceColumn(props: TableColumnProps): TableColumn {
+  return {
+    accessor: 'reference',
+    title: t`Reference`,
+    sortable: true,
+    switchable: true,
+    ...props
+  };
+}
+
+export function NoteColumn(props: TableColumnProps): TableColumn {
+  return {
+    accessor: 'note',
+    sortable: false,
+    title: t`Note`,
+    render: (record: any) => record.note ?? record.notes,
+    ...props
+  };
+}
+
+export function LineItemsProgressColumn(): TableColumn {
+  return {
+    accessor: 'line_items',
+    sortable: true,
+    render: (record: any) => (
+      <ProgressBar
+        progressLabel={true}
+        value={record.completed_lines}
+        maximum={record.line_items}
+      />
+    )
+  };
+}
+
+export function ProjectCodeColumn(props: TableColumnProps): TableColumn {
+  const globalSettings = useGlobalSettingsState.getState();
+  const enabled = globalSettings.isSet('PROJECT_CODES_ENABLED', true);
+
+  return {
+    accessor: 'project_code',
+    ordering: 'project_code',
+    sortable: true,
+    title: t`Project Code`,
+    hidden: !enabled,
+    render: (record: any) => {
+      const project_code = resolveItem(
+        record,
+        props.accessor ?? 'project_code_detail'
+      );
+      return <ProjectCodeHoverCard projectCode={project_code} />;
+    },
+    ...props
+  };
+}
+
+export function StatusColumn({
+  model,
+  sortable,
+  switchable,
+  ordering,
+  accessor,
+  title,
+  hidden
+}: {
+  model: ModelType;
+  sortable?: boolean;
+  switchable?: boolean;
+  accessor?: string;
+  ordering?: string;
+  hidden?: boolean;
+  title?: string;
+}) {
+  return {
+    accessor: accessor ?? 'status',
+    sortable: sortable ?? true,
+    switchable: switchable ?? true,
+    ordering: ordering,
+    title: title,
+    hidden: hidden,
+    render: TableStatusRenderer(model, accessor ?? 'status_custom_key')
+  };
+}
+
+export function CreatedByColumn(props: TableColumnProps): TableColumn {
+  return {
+    accessor: 'created_by',
+    title: t`Created By`,
+    sortable: true,
+    switchable: true,
+    render: (record: any) =>
+      record.created_by && RenderUser({ instance: record.created_by }),
+    ...props
+  };
+}
+
+export function ResponsibleColumn(props: TableColumnProps): TableColumn {
+  return {
+    accessor: 'responsible',
+    sortable: true,
+    switchable: true,
+    render: (record: any) =>
+      record.responsible &&
+      RenderOwner({ instance: record.responsible_detail }),
+    ...props
+  };
+}
+
+export function DateColumn(props: TableColumnProps): TableColumn {
+  return {
+    accessor: 'date',
+    sortable: true,
+    title: t`Date`,
+    switchable: true,
+    render: (record: any) =>
+      formatDate(resolveItem(record, props.accessor ?? 'date')),
+    ...props
+  };
+}
+
+export function StartDateColumn(props: TableColumnProps): TableColumn {
+  return DateColumn({
+    accessor: 'start_date',
+    title: t`Start Date`,
+    ...props
+  });
+}
+
+export function TargetDateColumn(props: TableColumnProps): TableColumn {
+  return DateColumn({
+    accessor: 'target_date',
+    title: t`Target Date`,
+    ...props
+  });
+}
+
+export function CreationDateColumn(props: TableColumnProps): TableColumn {
+  return DateColumn({
+    accessor: 'creation_date',
+    title: t`Creation Date`,
+    ...props
+  });
+}
+
+export function CompletionDateColumn(props: TableColumnProps): TableColumn {
+  return DateColumn({
+    accessor: 'completion_date',
+    title: t`Completion Date`,
+    ...props
+  });
+}
+
+export function ShipmentDateColumn(props: TableColumnProps): TableColumn {
+  return DateColumn({
+    accessor: 'shipment_date',
+    title: t`Shipment Date`,
+    ...props
+  });
+}
+
+export function CurrencyColumn({
+  accessor,
+  title,
+  currency,
+  currency_accessor,
+  sortable
+}: {
+  accessor: string;
+  title?: string;
+  currency?: string;
+  currency_accessor?: string;
+  sortable?: boolean;
+}): TableColumn {
+  return {
+    accessor: accessor,
+    title: title ?? t`Currency`,
+    sortable: sortable ?? true,
+    render: (record: any) => {
+      const currency_key = currency_accessor ?? `${accessor}_currency`;
+      return formatCurrency(resolveItem(record, accessor), {
+        currency: currency ?? resolveItem(record, currency_key)
+      });
+    }
+  };
+}
+
+export function TotalPriceColumn(): TableColumn {
+  return CurrencyColumn({
+    accessor: 'total_price',
+    title: t`Total Price`
+  });
+}

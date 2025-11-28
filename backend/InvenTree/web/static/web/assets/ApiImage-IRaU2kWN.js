@@ -1,0 +1,2 @@
+import{r as c,j as n,S as i,d7 as u,ct as g}from"./vendor-CcuSJJfV.js";import{u as m,d as l}from"./index-Cbva9V3Q.js";function o({str:t,len:e=100}){if(t=t??"",t=t.toString(),t.length<=e)return t;const a=Math.floor(e/2-1);return`${t.slice(0,a)} ... ${t.slice(-a)}`}function r(t){const{getHost:e}=m.getState(),a=c.useMemo(()=>l(t.src,e()),[e,t.src]);return n.jsx(i,{children:a?n.jsx(u,{...t,src:a,fit:"contain"}):n.jsx(g,{h:(t==null?void 0:t.h)??t.w,w:(t==null?void 0:t.w)??t.h})})}export{r as A,o as s};
+//# sourceMappingURL=ApiImage-IRaU2kWN.js.map

@@ -1,0 +1,2 @@
+import{j as s,V as i,S as l,x,cz as c}from"./vendor-CcuSJJfV.js";import{S as n}from"./ThemeContext-BhpK8cJK.js";function o({title:t,value:a}){return s.jsx(i,{p:"md",shadow:"xs",children:s.jsxs(l,{gap:"xs",children:[s.jsx(n,{size:"md",children:t}),s.jsx(x,{children:a})]})})}function h({items:t,minItems:a=3}){return s.jsx(c,{cols:{base:1,sm:Math.min(2,a),md:Math.min(3,a),lg:a},spacing:"xs",children:t.map((e,r)=>s.jsx(o,{title:e.title,value:e.value},`${r}-${e.value}`))})}export{h as F};
+//# sourceMappingURL=FactCollection-DabdoMO4.js.map

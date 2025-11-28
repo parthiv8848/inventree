@@ -1,0 +1,2 @@
+import{r,i as e,eQ as a,j as i}from"./vendor-CcuSJJfV.js";import{E as u}from"./GenericErrorPage-z7F0Fmjw.js";import{y as m}from"./ThemeContext-BhpK8cJK.js";import"./index-Cbva9V3Q.js";function E(){const t=m(),[s,o]=r.useState(e._({id:"SlfejT"}));return a(s),r.useEffect(()=>{t!=null&&t.statusText&&o(e._({id:"TpqeIh",values:{0:t.statusText}}))},[t]),i.jsx(u,{title:s,message:e._({id:"MVDSZK"})})}export{E as default};
+//# sourceMappingURL=ErrorPage-CJZBw9-k.js.map

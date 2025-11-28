@@ -1,0 +1,2 @@
+import{j as r,bL as x,x as d,c1 as m,i as s}from"./vendor-CcuSJJfV.js";import{a as j}from"./ThemeContext-BhpK8cJK.js";import{b as u}from"./QRCode-DsLib70l.js";function l({url:e,secret:t,value:i,error:a,setValue:n}){return r.jsxs(r.Fragment,{children:[r.jsx(x,{}),r.jsx(u,{data:e}),r.jsxs(d,{children:[r.jsx(j,{id:"8VEDbV"}),r.jsx("br",{}),t]}),r.jsx(m,{required:!0,label:s._({id:"+RO3kt"}),description:s._({id:"6mSv4V"}),value:i,onChange:o=>n(o.currentTarget.value),error:a})]})}export{l as Q};
+//# sourceMappingURL=QrRegistrationForm-DqvSUljx.js.map

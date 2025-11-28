@@ -1,0 +1,2 @@
+import{r,n as e,i,j as s,D as o}from"./vendor-CcuSJJfV.js";import{q as n,b as m,a as f}from"./ThemeContext-BhpK8cJK.js";import{a2 as l}from"./index-Cbva9V3Q.js";import{Wrapper as c}from"./Layout-CjXpQfif.js";function j(){const{key:a}=n(),t=m();return r.useEffect(()=>{a||(e.show({title:i._({id:"Z6LIBa"}),message:i._({id:"aUBlDM"}),color:"red"}),t("/login"))},[a]),s.jsx(c,{titleText:i._({id:"wCKkSr"}),children:s.jsx(o,{type:"submit",onClick:()=>l(a,t),children:s.jsx(f,{id:"uSMfoN"})})})}export{j as default};
+//# sourceMappingURL=VerifyEmail-H-38F5eV.js.map
